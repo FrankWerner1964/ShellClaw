@@ -26,18 +26,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "windows")]
     const SHELL_ARGS: &[&str] = &["-Command"];
     #[cfg(target_os = "windows")]
-    const SYSTEM_PROMPT: &str = "Du bist ein PowerShell-Assistent für Windows. Der Benutzer beschreibt in natürlicher Sprache, was er tun möchte. \
-                                 Gib NUR den passenden PowerShell-Befehl zurück, ohne Erklärung, ohne Backticks, ohne Titel. \
-                                 Wenn der Benutzer etwas Unsinniges oder Gefährliches fragt, antworte mit 'FEHLER: [Grund]'.";
+    const SYSTEM_PROMPT: &str = "You are a PowerShell assistant for Windows. The user describes in natural language what they want to do. \
+                                 Return ONLY the appropriate PowerShell command, without explanation, without backticks, without title. \
+                                 If the user asks something nonsensical or dangerous, respond with 'ERROR: [reason]'.";
 
     #[cfg(not(target_os = "windows"))]
     const SHELL_CMD: &str = "bash";
     #[cfg(not(target_os = "windows"))]
     const SHELL_ARGS: &[&str] = &["-c"];
     #[cfg(not(target_os = "windows"))]
-    const SYSTEM_PROMPT: &str = "Du bist ein Bash-Assistent für Linux (Raspberry Pi). Der Benutzer beschreibt in natürlicher Sprache, was er tun möchte. \
-                                 Gib NUR den passenden Bash-Befehl zurück, ohne Erklärung, ohne Backticks, ohne Titel. \
-                                 Wenn der Benutzer etwas Unsinniges oder Gefährliches fragt, antworte mit 'FEHLER: [Grund]'.";
+    const SYSTEM_PROMPT: &str = "You are a Bash assistant for Linux (Raspberry Pi). The user describes in natural language what they want to do. \
+                                 Return ONLY the appropriate Bash command, without explanation, without backticks, without title. \
+                                 If the user asks something nonsensical or dangerous, respond with 'ERROR: [reason]'.";
 
     println!("{}ShellClaw - Natural Language to Command Line", COLOR_DIM);
     println!("==============================================\n{}", COLOR_RESET);
@@ -45,7 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv::dotenv().ok();
 
     let api_key = env::var("MISTRAL_API_KEY")
-        .expect("Bitte MISTRAL_API_KEY in .env Datei setzen");
+        .expect("Please set MISTRAL_API_KEY in .env file");
 
     let client = Client::new();
 
@@ -57,14 +57,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     loop {
-        print!("{}Was möchtest du tun? > {}", COLOR_DIM, COLOR_RESET);
+        print!("{}What do you want to do? > {}", COLOR_DIM, COLOR_RESET);
         io::stdout().flush()?;
         let mut input = String::new();
         io::stdin().read_line(&mut input)?;
         let input = input.trim();
 
         if input.is_empty() || input == "exit" || input == "quit" {
-            println!("{}Tschüss!{}", COLOR_DIM, COLOR_RESET);
+            println!("{}Goodbye!{}", COLOR_DIM, COLOR_RESET);
             break;
         }
 
@@ -98,11 +98,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 content: command.clone(),
             });
 
-            if command.starts_with("FEHLER:") {
+            if command.starts_with("ERROR:") {
                 println!("\n{}{}{}", COLOR_DIM, command, COLOR_RESET);
             } else {
-                println!("\n{}Befehl: {}{}{}", COLOR_DIM, COLOR_YELLOW, command, COLOR_RESET);
-                print!("{}Ausführen? [J/n] > {}", COLOR_DIM, COLOR_RESET);
+                println!("\n{}Command: {}{}{}", COLOR_DIM, COLOR_YELLOW, command, COLOR_RESET);
+                print!("{}Execute? [Y/n] > {}", COLOR_DIM, COLOR_RESET);
                 io::stdout().flush()?;
 
                 let mut confirm = String::new();
@@ -110,7 +110,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let confirm = confirm.trim().to_lowercase();
 
                 if confirm.is_empty() || confirm == "j" || confirm == "y" {
-                    println!("\n{}--- Ausgabe ---\n{}", COLOR_DIM, COLOR_RESET);
+                    println!("\n{}--- Output ---\n{}", COLOR_DIM, COLOR_RESET);
                     let mut cmd = std::process::Command::new(SHELL_CMD);
                     for arg in SHELL_ARGS {
                         cmd.arg(arg);
@@ -127,10 +127,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                         Err(e) => {
-                            println!("{}Fehler beim Ausführen: {}{}", COLOR_DIM, e, COLOR_RESET);
+                            println!("{}Error during execution: {}{}", COLOR_DIM, e, COLOR_RESET);
                         }
                     }
-                    println!("\n{}--- Ende ---{}", COLOR_DIM, COLOR_RESET);
+                    println!("\n{}--- End ---{}", COLOR_DIM, COLOR_RESET);
                 }
             }
         }
